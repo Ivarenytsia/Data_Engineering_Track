@@ -148,6 +148,7 @@ def insert_recs(**kwargs) -> None:
 
     kwargs['ti'].xcom_push(key="job_ID", value=job_ID)
 
+    print("JOB_ID",job_ID)
 
 
 def get_hit_count(
@@ -180,6 +181,8 @@ def get_hit_count(
         
     kwargs['ti'].xcom_push(key="rand_digit_count", value=count)
 
+    print("COUNTED",count)
+
     # Simulate a scenario that this task fails for unknown reasons
     if is_raise_error():
         raise ValueError
@@ -204,7 +207,7 @@ def branching(**kwargs) -> List[str]:
         - add other thing you think necessary.
     """
     hit_count = kwargs['ti'].xcom_pull(key='rand_digit_count', task_ids=['get_hit_count'])
-    
+    print("HIT_COUNT:",hit_count[0],"THRESHOLD:",HIT_COUNT_THRESHOLD)
     if hit_count[0] > HIT_COUNT_THRESHOLD:
         return [TASK_ID_ACTION_ON_GT_THRESHOLD]
     return [TASK_ID_ACTION_ON_LTE_THRESHOLD]
