@@ -101,6 +101,7 @@ def create_tables(**kwargs) -> None:
     or by using ORM (based on the information in the provided query).
     """
     engine = get_engine()
+
     with engine.begin() as connection:
         connection.execute(text(f"""
             BEGIN; 
@@ -109,6 +110,7 @@ def create_tables(**kwargs) -> None:
             COMMIT;
         """))
     
+
 
 def insert_recs(**kwargs) -> None:
     """Insert a new record into table 'dummy_job' and table
@@ -129,14 +131,23 @@ def insert_recs(**kwargs) -> None:
         - add other thing you think necessary.
     """
     engine = get_engine()
+
     with engine.begin() as connection:
-        id_of_dummy_job = connection.execute(text(""" INSERT INTO dummy_job (is_active) VALUES(TRUE) RETURNING id;"""))
+        id_of_dummy_job = connection.execute(text(""" 
+            INSERT INTO dummy_job (is_active) 
+            VALUES(TRUE) 
+            RETURNING id;
+        """))
+
         job_ID = (list(id_of_dummy_job)[0][0])
-        connection.execute(text(f""" INSERT INTO dummy_job_result (job_id) VALUES({job_ID});"""))
+
+        connection.execute(text(f""" 
+            INSERT INTO dummy_job_result (job_id) 
+            VALUES({job_ID});
+        """))
+
     kwargs['ti'].xcom_push(key="job_ID", value=job_ID)
 
-    print("JOB_ID",job_ID)
-    # Kinda works, update later when engine URI is shared....
 
 
 def get_hit_count(
@@ -162,12 +173,13 @@ def get_hit_count(
       - add other thing you think necessary.
     """
     count = 0
+
     for i in range(rand_digit_amount):
         rand_int = get_rand_digit()
         count += sum(c == str(rand_int) for c in num_str)
         
     kwargs['ti'].xcom_push(key="rand_digit_count", value=count)
-    print("COUNTED",count)
+
     # Simulate a scenario that this task fails for unknown reasons
     if is_raise_error():
         raise ValueError
@@ -192,7 +204,7 @@ def branching(**kwargs) -> List[str]:
         - add other thing you think necessary.
     """
     hit_count = kwargs['ti'].xcom_pull(key='rand_digit_count', task_ids=['get_hit_count'])
-    print("HIT_COUNT:",hit_count[0],"THRESHOLD:",HIT_COUNT_THRESHOLD)
+    
     if hit_count[0] > HIT_COUNT_THRESHOLD:
         return [TASK_ID_ACTION_ON_GT_THRESHOLD]
     return [TASK_ID_ACTION_ON_LTE_THRESHOLD]
@@ -230,8 +242,6 @@ def action_on_gt_threshold(**kwargs) -> None:
             COMMIT;
         """))
 
-        a = connection.execute(text(f""" SELECT * FROM dummy_job_result WHERE job_id = {id[0]};"""))
-    print(id,list(a))#DELETE this later...
 
 
 def action_on_lte_threshold(**kwargs) -> None:
@@ -266,8 +276,6 @@ def action_on_lte_threshold(**kwargs) -> None:
             COMMIT;
         """))
 
-        a = connection.execute(text(f""" SELECT * FROM dummy_job_result WHERE job_id = {id[0]};"""))
-    print(id,list(a))#DELETE this later...
 
 
 def action_on_error(**kwargs) -> None:
@@ -301,8 +309,6 @@ def action_on_error(**kwargs) -> None:
             COMMIT;
         """))
 
-        a = connection.execute(text(f""" SELECT * FROM dummy_job_result WHERE job_id = {id[0]};"""))
-    print(id,list(a))#DELETE this later...
 
 
 # DAG creation ##########################################
